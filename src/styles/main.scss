@@ -1,6 +1,8 @@
 body, input, textarea, svg text {
-  font-family: 'VT323', monospace;
+  font-family: 'Handjet', 'Belanosima', 'VT323', monospace;
   font-size: 16pt;
+  font-weight: 300;
+  font-style: normal;
 }
 
 html, body {
@@ -20,21 +22,58 @@ body {
   grid-template-columns: 1fr 1fr 1fr 1fr;
 }
 
-app-header {
-  grid-area: header;
-  box-shadow: 0px 2px 8px 4px rgba(0,0,0,0.1);
-  display: flex;
-  align-items: center;
-  padding-left: 10px;
-  background: #333;
-  color: white;
+threads-view {
+  background: #eee;
+  padding-right: 4px;
 }
 
 messages-view {
   grid-area: chat;
+  input {
+    width: calc(100% - 12px);
+    box-sizing: border-box;
+    margin: 6px;
+    padding: 6px;
+    border: 2px solid #aaa;
+    border-radius: 5px;
+    border-bottom-width: 4px;
+    border-right-width: 4px;
+    transition: border 0.2s;
+    outline: none;
+  }
+  input:hover {
+    border-color: #777;
+  }
+  input:focus {
+    border-color: #777;
+    border-bottom-width: 2px;
+    border-right-width: 2px;
+    border-top-width: 4px;
+    border-left-width: 4px;
+
+  }
 }
 
 threads-view {
   grid-area: side;
   border-right: 1px solid #aaa;
+}
+
+messages-list .message:last-of-type {
+  animation: slideup 0.5s 1;
+}
+
+messages-list .message {
+  max-width: 600px !important;
+}
+
+@keyframes slideup {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0px);
+  }
 }

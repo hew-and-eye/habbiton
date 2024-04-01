@@ -6,6 +6,7 @@
 
 import { lilComponent } from "lil-framework"
 import { bindAttribute, globalState } from "../../state/globalState"
+import { Message, MessageThread, MessageThreadSingleton } from "../../state/MessageThread"
 
 const name = "messages-view"
 
@@ -17,9 +18,10 @@ const template = /*html*/`
       height: 100%;
       width: 100%;
       background-repeat: no-repeat;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 220 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cstyle%3E text %7B fill: %23999; font-size: 16px; font-family: VT323, monospace; %7D %3C/style%3E%3Ctext x='0' y='12'%3E(Select a conversation)%3C/text%3E%3C/svg%3E%0A");
       background-position: center;
       background-size: 200px 100px;
+      max-height: 100vh;
+      overflow: hidden;
     }
     .no-thread-selected {
       display: none;
@@ -33,8 +35,8 @@ const template = /*html*/`
     }
   </style>
   <div class="select-thread-cta"></div>
-  <messages-list class="{{threadSelectedClass}}"></messages-list>
-  <message-input class="{{threadSelectedClass}}"></message-input>
+  <messages-list threadName="{{selectedThread}}" class="{{threadSelectedClass}}"></messages-list>
+  <message-input lfhandle="handleMessage:sendMessage" class="{{threadSelectedClass}}"></message-input>
 `
 
 lilComponent({
@@ -48,9 +50,18 @@ lilComponent({
     mounted: [function() {
       bindAttribute(this, "selectedThread")
     }],
-    selectedThread: [function(thread: string) {
-      console.log("hmmmm", thread)
+    selectedThread: [async function(thread: string) {
       this.state.threadSelectedClass = thread ? "thread-selected" : "no-thread-selected"
+      if (!thread) {
+        this.state.thread = null
+      } else {
+        this.state.thread = MessageThreadSingleton(thread)
+      }
     }]
+  },
+  handlers: {
+    async handleMessage(event: CustomEvent) {
+      this.state.thread?.send(event.detail)
+    }
   }
 })

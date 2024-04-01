@@ -1,30 +1,47 @@
 import { lilComponent } from "lil-framework"
 import { globalState } from "../../state/globalState"
+import { MessageThread } from "../../state/MessageThread"
 
 const name = "thread-preview"
 
 const template = /*html*/`
   <style>
     thread-preview {
+      background: white;
       display: block;
-      padding: 8px;
-      border-bottom: 1px solid #aaa;
+      padding: 4px 8px;
+      margin: 6px;
+      border: 2px solid #aaa;
+      border-bottom-width: 4px;
+      border-left-width: 4px;
+      border-radius: 6px;
       box-sizing: border-box;
-      width: 100%;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: border 0.2s;
     }
     thread-preview.is-selected {
-      background-color: #f0f0f0;
+      border-color: #777;
+      border-top-width: 4px;
+      border-right-width: 4px;
+      border-bottom-width: 2px;
+      border-left-width: 2px;
     }
     thread-preview:hover {
-      background-color: #f4f4f4;
+      border-color: #777;
     }
     .message-preview {
       color: #777;
+      font-size: 0.8em;
     }
     .thread-name {
       color: #333;
+      text-transform: uppercase;
+    }
+    thread-preview .message-preview {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      max-width: 300px;
     }
   </style>
   <div class="thread-name">{{threadName}}</div>
@@ -47,9 +64,14 @@ lilComponent({
         this.classList.add("is-selected")
       })
     }],
-    threadName: [function(threadName: string) {
+    threadName: [async function(threadName: string) {
       // should get last message in thread and set preview
       console.log(`should get last message in ${threadName} and set preview`)
+      if (threadName) {
+        const thread = new MessageThread(threadName)
+        await thread.initialized
+        this.state.messagePreview = `"${thread.messages[thread.messages.length - 1]?.body}"`
+      }
     }]
   }
 })

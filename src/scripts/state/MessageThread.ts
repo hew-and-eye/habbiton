@@ -3,12 +3,18 @@
  * Handles persisting messages to an IndexedDB table, creating tables as needed.
  */
 
-import { openDB, IDBPDatabase, IDBPTransaction } from "idb";
+import { openDB, IDBPDatabase } from "idb";
+
+const singletonRegistry: Record<string, MessageThread> = {}
+export function MessageThreadSingleton(name: string) {
+  singletonRegistry[name] ||= new MessageThread(name)
+  return singletonRegistry[name]
+}
 
 export interface Message {
   sender: string;
   body: string;
-  timestamp: Date;
+  timestamp: string;
 }
 
 export class MessageThread {
@@ -19,6 +25,7 @@ export class MessageThread {
   sendMessageListeners: Function[];
   receiveMessageListeners: Function[];
   loadMessagesListeners: Function[];
+  messages: Message[];
   
   async send(body: string) {
     if (!this.initialized) {
@@ -27,13 +34,15 @@ export class MessageThread {
     const message: Message = {
       sender: "You",
       body,
-      timestamp: new Date()
+      timestamp: new Date().toString()
     }
+    this.messages.push(message)
     const tx = this.db.transaction(this.storeName, "readwrite")
     const id = await tx.store.put(message)
     tx.done
     const receiveMessageListeners = this.receiveMessageListeners
     const respond = async (response: Message) => {
+      this.messages.push(response)
       const tx = this.db.transaction(this.storeName, "readwrite")
       const id = await tx.store.put(response)
       tx.done
@@ -61,6 +70,7 @@ export class MessageThread {
     this.sendMessageListeners = []
     this.receiveMessageListeners = []
     this.loadMessagesListeners = []
+    this.messages = []
     const context = this
     this.initialized = new Promise(async (resolve, reject) => {
       try {
@@ -75,7 +85,8 @@ export class MessageThread {
         });
         // Read all transactions from object store
         const storedMessages = await context.db.transaction(context.storeName).store.getAll()
-        console.log("Got some stored messages", storedMessages)
+        this.messages = storedMessages
+        this.loadMessagesListeners.forEach(callback => callback(storedMessages))
         resolve(true)
       } catch(err) {
         console.error("Failed to initialize thread", err)
